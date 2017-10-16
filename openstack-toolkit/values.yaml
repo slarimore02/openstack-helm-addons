@@ -1,0 +1,97 @@
+# Copyright 2017 The Openstack-Helm Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Default values for openstack-toolkit.
+# This is a YAML-formatted file.
+# Declare name/value pairs to be passed into your templates.
+# name: value
+
+release_group: null
+
+images:
+  toolkit: slarimore02/openstack-toolkit:v1.7
+  pull_policy: "IfNotPresent"
+
+network:
+  toolkit:
+    port: 22
+
+pod:
+  replicas:
+    toolkit: 1
+  lifecycle:
+    upgrades:
+      deployments:
+        revision_history: 3
+        pod_replacement_strategy: RollingUpdate
+        rolling_update:
+          max_unavailable: 1
+          max_surge: 3
+  resources:
+    enabled: false
+    toolkit:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "1024Mi"
+        cpu: "2000m"
+
+secrets:
+  identity:
+    admin: keystone-keystone-admin
+  name: openstack-toolkit-authorized-keys
+  authorizedkeys:
+# substitute one or more authorized public keys for SSH authentication
+#    key1: PUBLIC_KEY
+#    key2: PUBLIC_KEY
+endpoints:
+  cluster_domain_suffix: cluster.local
+  identity:
+    namespace: null
+    name: keystone
+    auth:
+      admin:
+        region_name: RegionOne
+        username: admin
+        password: password
+        project_name: admin
+        user_domain_name: default
+        project_domain_name: default
+    hosts:
+      default: keystone-api
+      public: keystone
+    host_fqdn_override:
+      default: null
+    path:
+      default: /v3
+    scheme:
+      default: http
+    port:
+      admin:
+        default: 35357
+      api:
+        default: 80
+
+sshserver:
+  port: 22
+  node_port:
+    enabled: true
+    port: 31022
+
+manifests:
+  deployment_toolkit: true
+  service_ssh_server: true 
+  configmap_authorized_keys: true
+  configmap_openrc: true

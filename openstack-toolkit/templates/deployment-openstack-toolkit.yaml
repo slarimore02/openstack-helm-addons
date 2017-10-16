@@ -1,0 +1,68 @@
+{{/*
+Copyright 2017 The Openstack-Helm Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/}}
+
+{{- if .Values.manifests.deployment_toolkit }}
+{{- $envAll := . }}
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: openstack-toolkit
+spec:
+  replicas: {{ .Values.pod.replicas.toolkit }}
+{{ tuple $envAll | include "helm-toolkit.snippets.kubernetes_upgrades_deployment" | indent 2 }}
+  template:
+    metadata:
+      labels:
+{{ tuple $envAll "openstack-toolkit" "client" | include "helm-toolkit.snippets.kubernetes_metadata_labels" | indent 8 }}
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: openstack-toolkit
+        image: {{ .Values.images.toolkit }}
+        imagePullPolicy: {{ .Values.images.pull_policy }}
+{{ tuple $envAll $envAll.Values.pod.resources.toolkit | include "helm-toolkit.snippets.kubernetes_resources" | indent 6 }}
+        env:
+{{- with $env := dict "ksUserSecret" .Values.secrets.identity.admin }}
+{{- include "helm-toolkit.snippets.keystone_openrc_env_vars" $env | indent 8 }}
+{{- end }}
+        - name: ROOT_DB_CONNECTION
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-db-root-password
+              key: MYSQL_ROOT_PASSWORD
+        command:
+          - ./entrypoint.sh
+        ports:
+            - containerPort: {{ .Values.network.toolkit.port }}
+        readinessProbe:
+            tcpSocket:
+              port: {{ .Values.network.toolkit.port }}
+        volumeMounts:
+          - name: authorized-keys
+            mountPath: /root/.ssh/
+#            readOnly: true
+          - name: openrc
+            mountPath: /root/openrc
+      volumes:
+      - name: authorized-keys
+        configMap:
+          name: authorized-keys
+          defaultMode: 256
+      - name: openrc
+        configMap:
+          name: openrc
+{{- end }}
