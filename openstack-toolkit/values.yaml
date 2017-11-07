@@ -20,7 +20,7 @@
 release_group: null
 
 images:
-  toolkit: slarimore02/openstack-toolkit:v1.7
+  toolkit: slarimore02/openstack-toolkit:latest
   pull_policy: "IfNotPresent"
 
 network:
@@ -54,7 +54,7 @@ secrets:
   name: openstack-toolkit-authorized-keys
   authorizedkeys:
 # substitute one or more authorized public keys for SSH authentication
-#    key1: PUBLIC_KEY
+    key1: PUBLIC_KEY
 #    key2: PUBLIC_KEY
 endpoints:
   cluster_domain_suffix: cluster.local
